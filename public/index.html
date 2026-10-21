@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0f1320">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Flag Battle">
+  <title>Flag Battle: Marble Race</title>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" type="image/svg+xml" href="/icon.svg">
+  <link rel="apple-touch-icon" href="/icon.svg">
+  <link rel="stylesheet" href="/style.css">
+  <!-- Bundled Local Libraries (Zero CDN Dependencies) -->
+  <script src="/matter.min.js"></script>
+  <script src="/confetti.min.js"></script>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Top Bar -->
+    <header class="top-bar">
+      <button class="icon-btn" id="backBtn" aria-label="Back / Reset">&lt;</button>
+      <h1 class="app-title">Flag Battle: Marble Race</h1>
+      <div class="top-actions">
+        <button class="icon-btn" id="soundBtn" aria-label="Toggle Sound">🔊</button>
+        <button class="icon-btn" id="settingsBtn" aria-label="Settings">⚙️</button>
+      </div>
+    </header>
+
+    <!-- Sub-info -->
+    <div style="display:flex; justify-content:space-between; font-size:11px; color:#94a3b8; padding: 0 4px 6px;">
+      <span style="color:#38bdf8; font-weight:700;">Rotating Neon Rings</span>
+      <span id="timerText" style="font-family:monospace;">⏱️ 0.0s</span>
+    </div>
+
+    <!-- Arena Container -->
+    <main class="arena-wrapper">
+      <canvas id="gameCanvas"></canvas>
+      <div id="marbleTooltip" class="marble-tooltip">
+        <img id="tooltipImg" src="" alt="">
+        <span id="tooltipName">Country</span>
+      </div>
+    </main>
+
+    <!-- Bottom Controls & Finishers -->
+    <footer>
+      <!-- Controls -->
+      <div class="control-bar">
+        <button id="startBtn" class="primary-btn">START RACE</button>
+        <button id="restartBtn" class="icon-btn" style="border-radius:16px; width:46px; height:46px;" aria-label="Restart">🔄</button>
+        <div class="speed-selector">
+          <button class="speed-btn active" data-speed="1">1x</button>
+          <button class="speed-btn" data-speed="2">2x</button>
+          <button class="speed-btn" data-speed="3">3x</button>
+        </div>
+      </div>
+
+      <!-- Finished Strip -->
+      <section class="finished-container">
+        <div class="finished-header">
+          <span>Escaped Finishers</span>
+          <span id="escapedCountBadge">0 Out</span>
+        </div>
+
+        <!-- Leader podium (highlighted top center) -->
+        <div id="leaderPodium" class="leader-podium" style="display:none;">
+          <span style="font-size:16px;">🏆</span>
+          <img id="leaderFlag" class="leader-flag" src="" alt="Leader">
+          <div style="text-align:left;">
+            <div id="leaderName" style="font-weight:bold; font-size:12px; color:#e0f2fe;">Winner</div>
+            <div id="leaderTime" style="font-size:10px; color:#38bdf8; font-family:monospace;">0.0s</div>
+          </div>
+        </div>
+
+        <!-- Others row -->
+        <div id="finishedRow" class="finished-row">
+          <div style="color:#64748b; font-size:11px; padding:4px;">No marbles escaped yet...</div>
+        </div>
+      </section>
+    </footer>
+  </div>
+
+  <!-- Winner Modal -->
+  <div id="winnerModal" class="modal-overlay">
+    <div class="modal-content">
+      <button id="closeWinnerModal" class="modal-close">&times;</button>
+      <div style="font-size:36px; margin-bottom:8px;">👑</div>
+      <div style="font-size:12px; font-weight:700; color:#38bdf8; text-transform:uppercase; letter-spacing:0.05em;">Champion</div>
+      <h2 style="font-size:24px; font-weight:900; margin-top:4px;">VICTORY!</h2>
+      <img id="winnerFlagImg" class="winner-flag-img" src="" alt="Winner Flag">
+      <h3 id="winnerCountryName" style="font-size:18px; font-weight:800;">Country</h3>
+      <div style="font-size:12px; color:#94a3b8; margin-top:4px;">Finish Time: <strong id="winnerTime" style="color:#38bdf8; font-family:monospace;">0.0s</strong></div>
+      <button id="playAgainBtn" class="primary-btn" style="margin-top:20px; width:100%;">Play Again</button>
+    </div>
+  </div>
+
+  <!-- Settings Modal -->
+  <div id="settingsModal" class="modal-overlay">
+    <div class="modal-content" style="text-align:left;">
+      <button id="closeSettings" class="modal-close">&times;</button>
+      <h2 style="font-size:18px; font-weight:800; color:#38bdf8; margin-bottom:16px;">Settings</h2>
+      
+      <div style="margin-bottom:14px;">
+        <label style="font-size:12px; color:#94a3b8; display:block; margin-bottom:6px;">Game Mode</label>
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px;">
+          <button id="modeLast" class="speed-btn active" style="padding:8px 4px; border-radius:12px; font-size:11px;">Last Survivor</button>
+          <button id="modeFirst" class="speed-btn" style="padding:8px 4px; border-radius:12px; font-size:11px;">First Out</button>
+          <button id="modeEndless" class="speed-btn" style="padding:8px 4px; border-radius:12px; font-size:11px; color:#f59e0b;">Non-Stop ♾️</button>
+        </div>
+      </div>
+
+      <div style="margin-bottom:14px;">
+        <label style="font-size:12px; color:#94a3b8; display:block; margin-bottom:6px;">Marbles Count</label>
+        <div style="display:flex; gap:6px;">
+          <button class="speed-btn active" style="padding:8px 12px; border-radius:8px;">8</button>
+          <button class="speed-btn" style="padding:8px 12px; border-radius:8px;">12</button>
+          <button class="speed-btn" style="padding:8px 12px; border-radius:8px;">16</button>
+          <button class="speed-btn" style="padding:8px 12px; border-radius:8px;">24</button>
+        </div>
+      </div>
+
+      <button id="applySettings" class="primary-btn" style="margin-top:14px; width:100%;" onclick="document.getElementById('settingsModal').style.display='none'">Apply & Close</button>
+    </div>
+  </div>
+
+  <!-- Offline Ready Toast -->
+  <div id="offlineToast" style="position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:rgba(15,23,42,0.95); border:1px solid #10b981; border-radius:16px; padding:10px 16px; display:none; align-items:center; gap:8px; font-size:12px; font-weight:700; color:#6ee7b7; box-shadow:0 0 20px rgba(16,185,129,0.3); z-index:999;">
+    <span>⚡</span>
+    <span>Offline Ready: All flag assets cached!</span>
+  </div>
+
+  <script src="/script.js"></script>
+</body>
+</html>

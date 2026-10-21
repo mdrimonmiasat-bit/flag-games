@@ -1,0 +1,6 @@
+{
+  "name": "Flag Battle: Marble Race",
+  "description": "An exhilarating mobile-first marble race game featuring country flags bouncing through rotating neon concentric ring barriers.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
